@@ -1,0 +1,126 @@
+<!-- Back Navigation & Header Actions -->
+<div class="mb-4 d-flex justify-content-between align-items-center">
+  <%= link_to "← Back to Dashboard", surveys_path, class: "btn btn-outline-secondary btn-sm" %>
+  <div class="d-flex gap-2">
+    <%= link_to "Test Live Form", answer_survey_path(@survey), class: "btn btn-primary btn-sm", target: "_blank" %>
+    <%= link_to "Edit Survey Details", edit_survey_path(@survey), class: "btn btn-warning btn-sm" %>
+  </div>
+</div>
+
+<!-- Survey General Header Card -->
+<div class="card shadow-sm border-0 mb-4 bg-dark text-white p-4">
+  <div class="card-body">
+    <span class="badge bg-primary mb-2 text-uppercase tracking-wider fw-bold">Active Survey Campaign</span>
+    <h1 class="display-6 fw-bold m-0"><%= @survey.title %></h1>
+    <p class="lead text-light opacity-75 mt-2 mb-0"><%= @survey.description %></p>
+  </div>
+</div>
+
+<h3 class="h4 text-secondary fw-bold mb-3 mt-5">Metrics & Question Breakdown</h3>
+
+<!-- Dynamic Analytical Breakdown loop -->
+<% if @survey.questions.any? %>
+  <% @survey.questions.each_with_index do |question, idx| %>
+    <div class="card shadow-sm border-0 mb-4 bg-white">
+      <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+        <div>
+          <span class="text-primary fw-bold small d-block mb-1">QUESTION #<%= idx + 1 %></span>
+          <h4 class="h5 fw-bold text-dark mb-0"><%= question.content %></h4>
+        </div>
+        <span class="badge bg-light text-dark border p-2">
+          <%= question.question_type == 'satisfaction' ? '★ Satisfaction Scale' : '✍ Text Entry' %>
+        </span>
+      </div>
+      
+      <div class="card-body p-4">
+        <% total_answers = question.answers.count %>
+        
+        <% if total_answers > 0 %>
+          
+          <!-- CASE A: Satisfaction Scale Analytics Display (1 to 5 breakdown) -->
+          <% if question.question_type == 'satisfaction' %>
+            <div class="row align-items-center">
+              <div class="col-lg-4 text-center border-end py-3">
+                <% numeric_vals = question.answers.map { |a| a.content.to_f } %>
+                <% avg = (numeric_vals.sum / total_answers).round(2) %>
+                <span class="text-secondary small d-block">Global Rating Average</span>
+                <span class="display-4 fw-bold text-success"><%= avg %></span>
+                <span class="text-muted d-block small">out of 5.0 stars</span>
+                <span class="badge bg-light text-secondary mt-2 border"><%= total_answers %> votes</span>
+              </div>
+              
+              <div class="col-lg-8 py-2">
+                <span class="text-secondary small fw-bold d-block mb-2">Percentage Distribution:</span>
+                <!-- Loop from 5 down to 1 to show best scores first -->
+                <% (1..5).to_a.reverse.each do |score| %>
+                  <% count = question.answers.where(content: score.to_s).count %>
+                  <% percentage = ((count.to_f / total_answers) * 100).round(1) %>
+                  
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="text-warning fw-bold me-2" style="width: 60px;">★ <%= score %></span>
+                    <div class="progress flex-grow-1 bg-light" style="height: 12px;">
+                      <div class="progress-bar bg-warning" role="progressbar" style="width: <%= percentage %>%;" aria-valuenow="<%= percentage %>" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <span class="text-dark small fw-bold ms-3" style="width: 80px; text-align: right;">
+                      <%= percentage %>% <span class="text-muted fw-normal font-monospace">(<%= count %>)</span>
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+          <!-- CASE B: Text Answers Raw Feed List -->
+          <% else %>
+            <span class="text-secondary small fw-bold d-block mb-2">User Feedback Feed (<%= total_answers %> entries):</span>
+            <div class="bg-light p-3 rounded border inner-scroll-box" style="max-height: 250px; overflow-y: auto;">
+              <% question.answers.each do |answer| %>
+                <div class="p-3 bg-white rounded shadow-xs mb-2 border-start border-3 border-secondary">
+                  <span class="text-dark">"<%= answer.content %>"</span>
+                  <div class="text-end mt-1"><small class="text-muted font-monospace" style="font-size: 11px;">Submitted Response</small></div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+        <% else %>
+          <!-- Empty State for specific question -->
+          <div class="text-center py-4 bg-light rounded border border-dashed">
+            <p class="text-muted italic mb-0">No analytical insights available. No submissions have been collected for this item yet.</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% else %>
+  <div class="text-center card shadow-sm p-5 bg-white border-0">
+    <p class="text-muted fs-5 mb-0">This survey has no questions configured yet.</p>
+  </div>
+<% end %>
+
+<!-- Separate Collapsible Card for Management/Add Questions -->
+<div class="card shadow-sm border-0 mt-5 bg-white">
+  <div class="card-header bg-light fw-bold text-secondary">
+    Survey Management Console (Add Questions)
+  </div>
+  <div class="card-body p-4">
+    <%= form_with(model: [ @survey, Question.new ], local: true) do |form| %>
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <%= form.label :content, "New Question Text", class: "form-label fw-bold" %>
+          <%= form.text_field :content, placeholder: "e.g., How likely are you to recommend us?", class: "form-control", required: true %>
+        </div>
+        <div class="col-md-3">
+          <%= form.label :question_type, "Response Interface Type", class: "form-label fw-bold" %>
+          <%= form.select :question_type, [["Text Response", "text"], ["Satisfaction Scale (1-5)", "satisfaction"]], {}, class: "form-select" %>
+        </div>
+        <div class="col-md-3">
+          <%= form.submit "Deploy New Question", class: "btn btn-success w-100 fw-bold" %>
+        </div>
+      </div>
+    <% end %>
+    
+    <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+      <%= button_to "Permanently Delete Entire Survey", @survey, method: :delete, class: "btn btn-outline-danger btn-sm", data: { confirm: "Warning: This action deletes all associated statistics and cannot be undone. Proceed?" } %>
+    </div>
+  </div>
+</div>
