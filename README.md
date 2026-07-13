@@ -1,6 +1,8 @@
 # 📊 White-Label Survey Analytics Dashboard
 
-A lightweight Survey Analytics application built with **Ruby on Rails 8** that allows users to create surveys, collect responses, and visualize key performance indicators through an intuitive dashboard.
+A lightweight survey analytics application built with **Ruby on Rails 8** that allows users to create surveys, collect responses, and visualize key performance indicators through an intuitive dashboard.
+
+The project focuses on building a modern web application with a clean MVC structure, relational database design, and a foundation that can be extended for multi-tenant and white-label solutions.
 
 ## Features
 
@@ -10,13 +12,15 @@ A lightweight Survey Analytics application built with **Ruby on Rails 8** that a
 - Dynamic survey forms
 - Multiple question support
 - Responsive interface with Bootstrap 5
-- Relational database using Active Record associations
+- Relational database design using Active Record associations
 
 ## Tech Stack
 
 - Ruby on Rails 8
-- SQLite3
+- PostgreSQL
 - Bootstrap 5
+- Active Record
+- RESTful architecture
 
 ## Installation
 
@@ -36,7 +40,8 @@ bundle install
 Set up the database:
 
 ```bash
-bin/rails db:prepare
+bin/rails db:create
+bin/rails db:migrate
 bin/rails db:seed
 ```
 
