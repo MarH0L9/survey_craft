@@ -86,5 +86,5 @@ end
 
 group :production do
   # Use PostgreSQL in production (Render)
-  gem "pg", "~> 1.5"
+  gem "pg", "~> 1.7"
 end
